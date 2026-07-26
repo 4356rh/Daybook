@@ -900,6 +900,34 @@
       } else {
         showToast('Copy not supported here');
       }
+    },
+    'open-backup': function(){
+      state.backupError = null; state.overlay = 'backup'; render();
+    },
+    'copy-backup-code': function(){
+      var text = currentBackupPayload();
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(function(){ showToast('Backup code copied'); }).catch(function(){ showToast('Could not copy — select the text manually'); });
+      } else {
+        var el = document.getElementById('backupOut');
+        if (el){ el.focus(); el.select(); }
+        showToast('Select the text and copy manually');
+      }
+    },
+    'restore-backup-code': function(){
+      var el = document.getElementById('backupIn');
+      var raw = el ? el.value.trim() : '';
+      var data;
+      try{ data = JSON.parse(raw); } catch(e){ state.backupError = "That doesn't look like a valid backup code."; render(); return; }
+      if (!data || !Array.isArray(data.profiles)){ state.backupError = "That doesn't look like a valid backup code."; render(); return; }
+      state.profiles = data.profiles;
+      state.selectedProfileId = data.selectedProfileId || (data.profiles[0] && data.profiles[0].id) || null;
+      state.theme = data.theme === 'dark' ? 'dark' : 'light';
+      state.hasOnboarded = !!data.hasOnboarded;
+      state.backupError = null;
+      state.overlay = null;
+      state.route = 'home';
+      showToast('Data restored');
     }
   };
 
@@ -945,6 +973,12 @@
       el.innerHTML =
         '<button class="icon-btn" data-action="close-overlay" aria-label="Back">' + ICONS.back + '</button>' +
         '<span class="header-title">' + (state.editingProfileId ? 'Edit profile' : 'Add profile') + '</span>';
+      return;
+    }
+    if (state.overlay === 'backup'){
+      el.innerHTML =
+        '<button class="icon-btn" data-action="close-overlay" aria-label="Back">' + ICONS.back + '</button>' +
+        '<span class="header-title">Backup &amp; restore</span>';
       return;
     }
 
@@ -1188,13 +1222,45 @@
       '</div>';
 
     html += '<div class="card">' +
+      '<div class="settings-row"><div><div class="t">Back up or transfer data</div><div class="s">Copy a backup code, or restore one on another device</div></div>' +
+      '<button class="btn btn-ghost btn-sm" data-action="open-backup">Open</button></div>' +
+      '</div>';
+
+    html += '<div class="card">' +
       '<div class="settings-row"><div><div class="t">Clear demo data</div><div class="s">Removes all profiles and notes</div></div>' +
       '<button class="btn btn-danger btn-sm" data-action="clear-data-request">Clear</button></div>' +
       '<div class="settings-row"><div><div class="t">Reset app state</div><div class="s">Restores the two example profiles</div></div>' +
       '<button class="btn btn-ghost btn-sm" data-action="reset-app-request">Reset</button></div>' +
       '</div>';
 
-    html += '<div class="privacy-note">Daybook is a personal planning aid, not a medical device. Estimates are approximations based on averages you enter and can be wrong. All data lives in this session only — nothing is saved, synced, or sent anywhere, and it disappears when you close or reload the app.</div>';
+    html += '<div class="privacy-note">Daybook is a personal planning aid, not a medical device. Estimates are approximations based on averages you enter and can be wrong. Your data is saved only in this browser, on this device — nothing is sent to a server. Opening Daybook from a different browser, device, or address starts fresh; use the backup code above to move data between them.</div>';
+    return html;
+  }
+
+  /* ---- Backup / restore overlay ---- */
+  function currentBackupPayload(){
+    return JSON.stringify({
+      profiles: state.profiles,
+      selectedProfileId: state.selectedProfileId,
+      theme: state.theme,
+      hasOnboarded: state.hasOnboarded
+    }, null, 2);
+  }
+  function renderBackup(){
+    var html = '<div class="app-content" style="padding-top:18px;">';
+    html += '<div class="card">' + sectionLabel('Your backup code') +
+      '<p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 10px;line-height:1.5;">Copy this and save it somewhere (notes app, password manager). Paste it back in on any device running Daybook to restore your profiles.</p>' +
+      '<textarea id="backupOut" readonly style="width:100%;min-height:120px;font-family:ui-monospace,monospace;font-size:11px;background:var(--paper);border:1px solid var(--hairline-strong);border-radius:11px;padding:10px;color:var(--ink);">' + esc(currentBackupPayload()) + '</textarea>' +
+      '<div class="message-actions"><button class="link-btn" data-action="copy-backup-code">' + ICONS.copy + 'Copy code</button></div>' +
+      '</div>';
+
+    html += '<div class="card">' + sectionLabel('Restore from a backup code') +
+      '<p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 10px;line-height:1.5;">Paste a previously copied backup code below. This replaces everything currently in Daybook on this device.</p>' +
+      '<textarea id="backupIn" placeholder="Paste backup code here…" style="width:100%;min-height:120px;font-family:ui-monospace,monospace;font-size:11px;background:var(--paper);border:1px solid var(--hairline-strong);border-radius:11px;padding:10px;color:var(--ink);margin-bottom:10px;"></textarea>' +
+      (state.backupError ? '<div class="err">' + esc(state.backupError) + '</div>' : '') +
+      '<div class="form-actions"><button class="btn btn-primary" data-action="restore-backup-code">Restore</button></div>' +
+      '</div>';
+    html += '</div>';
     return html;
   }
 
@@ -1355,6 +1421,7 @@
       if (state.overlay === 'onboarding') overlayEl.innerHTML = renderOnboarding();
       else if (state.overlay === 'switcher') overlayEl.innerHTML = renderSwitcher();
       else if (state.overlay === 'form') overlayEl.innerHTML = renderForm();
+      else if (state.overlay === 'backup') overlayEl.innerHTML = renderBackup();
     } else {
       overlayEl.classList.remove('active');
       overlayEl.innerHTML = '';
