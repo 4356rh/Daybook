@@ -336,7 +336,7 @@
 
   .legend{ display:flex; flex-wrap:wrap; gap:10px 14px; margin:2px 0 16px; }
   .legend-item{ display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--ink-soft); }
-  .legend-dot{ width:9px; height:9px; border-radius:3px; flex:none; }
+  .legend-dot{ width:9px; height:9px; border-radius:3px; flex:none; box-shadow:0 0 0 1px var(--hairline-strong); }
   .legend-season{ opacity:.75; }
 
   .cal-weekdays{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:6px; }
@@ -349,11 +349,19 @@
   }
   .cal-cell.today{ border-color:var(--accent); font-weight:700; }
   .cal-cell.blank{ color:var(--ink-soft); opacity:.45; }
-  .cal-cell.warn-cell{ flex-direction:column; justify-content:flex-start; gap:3px; padding-top:6px; background:var(--paper); border-color:var(--hairline); }
+  .cal-cell.warn-cell{ flex-direction:column; justify-content:flex-start; gap:2px; padding-top:6px; background:var(--paper); border-color:var(--hairline); }
   .cal-daynum{ font-size:11.5px; }
-  .dot-row{ display:flex; align-items:center; gap:2px; }
-  .mini-dot{ width:5.5px; height:5.5px; border-radius:50%; flex:none; }
+  .dot-row{ display:flex; align-items:center; justify-content:center; gap:1px; flex-wrap:wrap; }
+  .mini-dot-btn{ background:none; border:0; padding:3px; display:flex; align-items:center; justify-content:center; }
+  .mini-dot{ width:8px; height:8px; border-radius:50%; flex:none; box-shadow:0 0 0 1px var(--hairline-strong); }
   .mini-more{ font-size:8px; color:var(--ink-soft); margin-left:1px; }
+
+  .color-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid var(--hairline); }
+  .color-row:last-child{ border-bottom:0; }
+  .color-row .t{ font-size:13.5px; }
+  .color-row input[type="color"]{
+    width:38px; height:32px; border:1px solid var(--hairline-strong); border-radius:8px; background:none; padding:2px;
+  }
 
   /* ---------- notes ---------- */
   .note-card{ background:var(--paper-raised); border:1px solid var(--hairline); border-radius:14px; padding:14px; margin-bottom:12px; }
@@ -453,9 +461,9 @@
     return IDENTITY_COLORS[h % IDENTITY_COLORS.length];
   }
 
-  var REL_COLORS = {
-    partner: '#6B8577', wife: '#8D7096', girlfriend: '#6E8B99',
-    daughter: '#A67A57', friend: '#8C8A54', other: '#9C8B76'
+  var DEFAULT_REL_COLORS = {
+    partner: '#3E6B54', wife: '#7A4F92', girlfriend: '#2B6E86',
+    daughter: '#B35A1E', friend: '#8A7A1E', other: '#6E5B4A'
   };
 
   var SEASON_ICONS = {
@@ -680,7 +688,8 @@
         profiles: state.profiles,
         selectedProfileId: state.selectedProfileId,
         theme: state.theme,
-        hasOnboarded: state.hasOnboarded
+        hasOnboarded: state.hasOnboarded,
+        relColors: state.relColors
       }));
     } catch(e){ /* storage unavailable or full - continue in-memory only */ }
   }
@@ -697,6 +706,7 @@
     overlay: (persisted && persisted.hasOnboarded) ? null : 'onboarding',
     hasOnboarded: !!(persisted && persisted.hasOnboarded),
     theme: (persisted && persisted.theme) || (prefersDark ? 'dark' : 'light'),
+    relColors: Object.assign({}, DEFAULT_REL_COLORS, (persisted && persisted.relColors) || {}),
     confirmDialog: null,
     toast: null,
     profileForm: null,
@@ -904,6 +914,10 @@
     'open-backup': function(){
       state.backupError = null; state.overlay = 'backup'; render();
     },
+    'reset-rel-colors': function(){
+      state.relColors = Object.assign({}, DEFAULT_REL_COLORS); render();
+      showToast('Colours reset');
+    },
     'copy-backup-code': function(){
       var text = currentBackupPayload();
       if (navigator.clipboard && navigator.clipboard.writeText){
@@ -924,6 +938,7 @@
       state.selectedProfileId = data.selectedProfileId || (data.profiles[0] && data.profiles[0].id) || null;
       state.theme = data.theme === 'dark' ? 'dark' : 'light';
       state.hasOnboarded = !!data.hasOnboarded;
+      state.relColors = Object.assign({}, DEFAULT_REL_COLORS, data.relColors || {});
       state.backupError = null;
       state.overlay = null;
       state.route = 'home';
@@ -1151,16 +1166,18 @@
       var date = addDays(gridStart, i);
       var dots = [];
       state.profiles.forEach(function(p){
-        if (phaseForDate(p, date) === 'lateluteal') dots.push(REL_COLORS[p.relationship] || REL_COLORS.other);
+        if (phaseForDate(p, date) === 'lateluteal'){
+          dots.push({ id: p.id, color: state.relColors[p.relationship] || state.relColors.other });
+        }
       });
       cells.push({ date: date, isToday: isoDate(date) === isoDate(t), dots: dots });
     }
 
-    var html = '<p class="greeting-sub">No names — just relationship type, for a quick heads-up on who\'s heading into a PMS window.</p>';
+    var html = '<p class="greeting-sub">No names — just relationship type, for a quick heads-up on who\'s heading into a PMS window. Tap a dot to open that profile.</p>';
 
     html += '<div class="legend">';
     RELATIONSHIPS.forEach(function(r){
-      if (usedRels[r.key]) html += '<span class="legend-item"><span class="legend-dot" style="background:' + REL_COLORS[r.key] + '"></span>' + r.label + '</span>';
+      if (usedRels[r.key]) html += '<span class="legend-item"><span class="legend-dot" style="background:' + state.relColors[r.key] + '"></span>' + r.label + '</span>';
     });
     html += '</div>';
 
@@ -1170,8 +1187,8 @@
       html += '<div class="cal-cell warn-cell' + (c.isToday ? ' today' : '') + '">' +
         '<span class="cal-daynum">' + c.date.getDate() + '</span>';
       if (c.dots.length){
-        html += '<span class="dot-row">' + c.dots.slice(0, 4).map(function(col){
-          return '<span class="mini-dot" style="background:' + col + '"></span>';
+        html += '<span class="dot-row">' + c.dots.slice(0, 4).map(function(d){
+          return '<button type="button" class="mini-dot-btn" data-action="select-profile" data-id="' + d.id + '" aria-label="Open profile"><span class="mini-dot" style="background:' + d.color + '"></span></button>';
         }).join('') + (c.dots.length > 4 ? '<span class="mini-more">+' + (c.dots.length - 4) + '</span>' : '') + '</span>';
       }
       html += '</div>';
@@ -1222,6 +1239,15 @@
       '</div>';
 
     html += '<div class="card">' +
+      sectionLabel('Early Warning colors') +
+      RELATIONSHIPS.map(function(r){
+        return '<div class="color-row"><span class="t">' + r.label + '</span>' +
+          '<input type="color" data-rel-color="' + r.key + '" value="' + state.relColors[r.key] + '" aria-label="Colour for ' + r.label + '" /></div>';
+      }).join('') +
+      '<div class="message-actions"><button class="link-btn" data-action="reset-rel-colors">Reset to defaults</button></div>' +
+      '</div>';
+
+    html += '<div class="card">' +
       '<div class="settings-row"><div><div class="t">Back up or transfer data</div><div class="s">Copy a backup code, or restore one on another device</div></div>' +
       '<button class="btn btn-ghost btn-sm" data-action="open-backup">Open</button></div>' +
       '</div>';
@@ -1243,7 +1269,8 @@
       profiles: state.profiles,
       selectedProfileId: state.selectedProfileId,
       theme: state.theme,
-      hasOnboarded: state.hasOnboarded
+      hasOnboarded: state.hasOnboarded,
+      relColors: state.relColors
     }, null, 2);
   }
   function renderBackup(){
@@ -1447,6 +1474,12 @@
         e.preventDefault();
         actions['attempt-unlock']();
       }
+    });
+    phone.addEventListener('change', function(e){
+      var el = e.target.closest('[data-rel-color]');
+      if (!el) return;
+      state.relColors[el.getAttribute('data-rel-color')] = el.value;
+      persistState();
     });
     bindDraftInputs();
     render();
