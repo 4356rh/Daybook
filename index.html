@@ -1,0 +1,1368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Daybook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet" />
+<meta name="description" content="Personal daybook." />
+<meta name="apple-mobile-web-app-title" content="Daybook" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<style>
+  :root{
+    --page-bg:#E4DECF;
+    --page-ink:#2A241C;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --page-bg:#15120E; --page-ink:#EDE6D6; }
+  }
+  :root[data-theme="dark"]{ --page-bg:#15120E; --page-ink:#EDE6D6; }
+  :root[data-theme="light"]{ --page-bg:#E4DECF; --page-ink:#2A241C; }
+
+  *,*::before,*::after{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+      radial-gradient(circle at 18% 12%, rgba(0,0,0,.04) 0, transparent 42%),
+      radial-gradient(circle at 84% 82%, rgba(0,0,0,.04) 0, transparent 38%),
+      var(--page-bg);
+    color:var(--page-ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    padding:28px 14px;
+    -webkit-font-smoothing:antialiased;
+  }
+  button, input, select, textarea{ font-family:inherit; }
+  button{ cursor:pointer; }
+
+  .page-caption{
+    position:fixed; top:14px; left:50%; transform:translateX(-50%);
+    font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--page-ink); opacity:.38; pointer-events:none;
+  }
+
+  /* ---------- phone shell ---------- */
+  .phone{
+    --font-display: ui-serif,"Iowan Old Style","Palatino Linotype","Book Antiqua",Georgia,serif;
+    --font-body: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+
+    --paper:#ECE7DA; --paper-raised:#F6F2E7; --ink:#2A241C; --ink-soft:#786D5C;
+    --hairline:#DCD4C0; --hairline-strong:#C9BFA6;
+    --accent:#9C6B2E; --accent-strong:#7E5522; --accent-on:#FBF6EA; --accent-soft:#E9D9BA;
+    --danger:#A2453B; --danger-soft:#E7D2CC;
+
+    --ph-menstrual:#A2453B;  --ph-menstrual-soft:#E7D2CC;
+    --ph-follicular:#6C8752; --ph-follicular-soft:#DBE3D0;
+    --ph-ovulatory:#B8842C;  --ph-ovulatory-soft:#EEDEB6;
+    --ph-luteal:#8B6F8B;     --ph-luteal-soft:#E2D8E2;
+    --ph-lateluteal:#6E4A4F;--ph-lateluteal-soft:#DCC9C9;
+
+    --shadow:0 1px 2px rgba(42,36,28,.08), 0 18px 40px rgba(42,36,28,.16);
+
+    position:relative;
+    width:100%; max-width:412px; height:850px; max-height:92vh;
+    background:var(--paper); color:var(--ink);
+    border-radius:40px; overflow:hidden;
+    box-shadow:var(--shadow), 0 0 0 1px var(--hairline-strong);
+    display:flex; flex-direction:column;
+    font-family:var(--font-body);
+    isolation:isolate;
+  }
+  .phone.theme-dark{
+    --paper:#1B1712; --paper-raised:#241E17; --ink:#EDE6D6; --ink-soft:#A79C89;
+    --hairline:#372F20; --hairline-strong:#4A4029;
+    --accent:#D3A559; --accent-strong:#E8BC72; --accent-on:#241A0C; --accent-soft:#3E3118;
+    --danger:#D3776A; --danger-soft:#3A241F;
+
+    --ph-menstrual:#D3776A;  --ph-menstrual-soft:#3A241F;
+    --ph-follicular:#93B27A; --ph-follicular-soft:#232E1D;
+    --ph-ovulatory:#E0B563;  --ph-ovulatory-soft:#362912;
+    --ph-luteal:#BB9FC4;     --ph-luteal-soft:#2C2331;
+    --ph-lateluteal:#C08890;--ph-lateluteal-soft:#2E1F20;
+
+    --shadow:0 1px 2px rgba(0,0,0,.45), 0 18px 40px rgba(0,0,0,.5);
+  }
+
+  .statusbar{
+    flex:none; display:flex; align-items:center; justify-content:center;
+    padding:12px 20px 0; font-size:12px; letter-spacing:.03em;
+    color:var(--ink-soft); font-variant-numeric:tabular-nums;
+  }
+
+  .app-shell{ flex:1 1 auto; display:flex; flex-direction:column; min-height:0; }
+
+  .app-header{
+    flex:none; display:flex; align-items:center; gap:10px;
+    padding:14px 18px 14px; border-bottom:1px solid var(--hairline);
+    background:var(--paper);
+  }
+  .brand-mark{ display:flex; align-items:center; gap:9px; }
+  .brand-glyph{ width:26px; height:26px; flex:none; }
+  .brand-name{ font-family:var(--font-display); font-size:18px; letter-spacing:.01em; }
+  .icon-btn{
+    width:34px; height:34px; border-radius:50%; border:1px solid var(--hairline);
+    background:var(--paper-raised); display:flex; align-items:center; justify-content:center;
+    color:var(--ink); flex:none;
+  }
+  .icon-btn svg{ width:17px; height:17px; }
+  .profile-chip{
+    margin-left:auto; display:flex; align-items:center; gap:8px;
+    background:var(--paper-raised); border:1px solid var(--hairline);
+    border-radius:999px; padding:5px 13px 5px 5px; max-width:190px;
+    color:var(--ink); text-align:left;
+  }
+  .profile-chip .name{ font-size:13px; font-weight:600; line-height:1.15; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .profile-chip .rel{ font-size:10.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.06em; }
+  .avatar{
+    width:27px; height:27px; border-radius:50%; flex:none;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-size:12.5px; font-weight:600; color:#fbf6ea;
+  }
+  .avatar.lg{ width:44px; height:44px; font-size:18px; }
+  .header-title{ font-family:var(--font-display); font-size:17px; }
+
+  .app-content{
+    flex:1 1 auto; overflow-y:auto; overflow-x:hidden;
+    padding:18px 18px 28px;
+  }
+
+  .tabbar{
+    flex:none; display:flex; border-top:1px solid var(--hairline);
+    background:var(--paper); padding:7px 4px 14px; position:relative; z-index:2;
+  }
+  .tab{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;
+    padding:6px 2px; background:none; border:0; color:var(--ink-soft);
+    font-size:10px; letter-spacing:.05em; text-transform:uppercase;
+  }
+  .tab.active{ color:var(--accent); }
+  .tab svg{ width:20px; height:20px; }
+
+  /* ---------- overlay / modal / toast layers ---------- */
+  .overlay-layer{
+    position:absolute; inset:0; z-index:20; display:none;
+    flex-direction:column; background:var(--paper);
+  }
+  .overlay-layer.active{ display:flex; }
+
+  .modal-layer{
+    position:absolute; inset:0; z-index:40; display:none;
+    align-items:center; justify-content:center; padding:26px;
+    background:rgba(20,16,10,.42);
+  }
+  .phone.theme-dark .modal-layer{ background:rgba(0,0,0,.6); }
+  .modal-layer.active{ display:flex; }
+  .modal-card{
+    width:100%; max-width:300px; background:var(--paper-raised);
+    border:1px solid var(--hairline); border-radius:16px; padding:20px;
+    box-shadow:var(--shadow);
+  }
+  .modal-card h3{ margin:0 0 8px; font-family:var(--font-display); font-size:17px; }
+  .modal-card p{ margin:0 0 18px; font-size:13.5px; line-height:1.5; color:var(--ink-soft); }
+  .modal-actions{ display:flex; gap:10px; }
+
+  .toast-layer{
+    position:absolute; left:0; right:0; bottom:88px; z-index:50;
+    display:flex; justify-content:center; pointer-events:none;
+  }
+  .toast{
+    background:var(--ink); color:var(--paper); font-size:12.5px;
+    padding:9px 16px; border-radius:999px; box-shadow:var(--shadow);
+    opacity:0; transform:translateY(6px); transition:opacity .18s ease, transform .18s ease;
+  }
+  .toast.show{ opacity:1; transform:translateY(0); }
+
+  @media (prefers-reduced-motion: reduce){
+    .toast{ transition:none; }
+    *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
+  }
+
+  /* ---------- onboarding ---------- */
+  .onboard{ flex:1; display:flex; flex-direction:column; padding:38px 26px 26px; }
+  .onboard-glyph{ width:56px; height:56px; margin-bottom:22px; }
+  .onboard h1{ font-family:var(--font-display); font-size:28px; line-height:1.18; margin:0 0 14px; text-wrap:balance; }
+  .onboard p{ font-size:14.5px; line-height:1.62; color:var(--ink-soft); margin:0 0 14px; }
+  .onboard .fine{ font-size:12px; color:var(--ink-soft); border-top:1px solid var(--hairline); padding-top:14px; margin-top:auto; line-height:1.55; }
+
+  .lock-screen{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px 30px; text-align:center; }
+  .lock-screen .onboard-glyph{ margin-bottom:20px; opacity:.85; }
+  .lock-screen h1{ font-family:var(--font-display); font-size:24px; margin:0 0 8px; }
+  .lock-screen p{ font-size:13.5px; color:var(--ink-soft); margin:0 0 22px; line-height:1.5; }
+  .lock-screen .field{ width:100%; max-width:220px; margin-bottom:14px; }
+  .lock-screen input{ text-align:center; letter-spacing:.35em; font-size:18px; font-variant-numeric:tabular-nums; }
+  .lock-screen .btn{ width:auto; padding:11px 32px; }
+
+  /* ---------- generic building blocks ---------- */
+  .section-label{
+    font-size:11px; text-transform:uppercase; letter-spacing:.1em;
+    color:var(--ink-soft); margin:0 0 10px; display:flex; align-items:center; gap:8px;
+  }
+  .section-label .rule{ flex:1; height:1px; background:var(--hairline); }
+
+  .card{
+    background:var(--paper-raised); border:1px solid var(--hairline);
+    border-radius:16px; padding:16px; margin-bottom:16px;
+  }
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:7px;
+    border-radius:12px; border:1px solid transparent; padding:11px 16px;
+    font-size:14px; font-weight:600; width:100%;
+  }
+  .btn-primary{ background:var(--accent); color:var(--accent-on); }
+  .btn-primary:active{ background:var(--accent-strong); }
+  .btn-ghost{ background:var(--paper-raised); color:var(--ink); border-color:var(--hairline-strong); }
+  .btn-danger{ background:transparent; color:var(--danger); border-color:var(--danger); }
+  .btn-sm{ width:auto; padding:8px 14px; font-size:12.5px; }
+
+  .empty-state{ text-align:center; padding:50px 18px; color:var(--ink-soft); }
+  .empty-state svg{ width:40px; height:40px; margin-bottom:14px; opacity:.7; }
+  .empty-state h3{ font-family:var(--font-display); font-size:18px; color:var(--ink); margin:0 0 8px; }
+  .empty-state p{ font-size:13.5px; line-height:1.55; margin:0 0 18px; }
+
+  /* ---------- profile list / switcher ---------- */
+  .profile-card{
+    display:flex; align-items:center; gap:12px; width:100%; text-align:left;
+    background:var(--paper-raised); border:1px solid var(--hairline); border-radius:14px;
+    padding:12px 12px; margin-bottom:10px;
+  }
+  .profile-card.selected{ border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
+  .profile-card .info{ flex:1; min-width:0; }
+  .profile-card .info .n{ font-weight:600; font-size:14.5px; }
+  .profile-card .info .r{ font-size:12px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.05em; margin-top:1px; }
+  .profile-card .info .d{ font-size:11.5px; color:var(--ink-soft); margin-top:4px; }
+  .profile-card .row-actions{ display:flex; gap:6px; }
+  .row-actions button{
+    width:30px; height:30px; border-radius:9px; border:1px solid var(--hairline);
+    background:var(--paper); display:flex; align-items:center; justify-content:center; color:var(--ink-soft);
+  }
+  .row-actions svg{ width:15px; height:15px; }
+
+  .fab{
+    position:absolute; right:20px; bottom:26px; width:54px; height:54px; border-radius:50%;
+    background:var(--accent); color:var(--accent-on); border:0; box-shadow:var(--shadow);
+    display:flex; align-items:center; justify-content:center; z-index:5;
+  }
+  .fab svg{ width:23px; height:23px; }
+
+  /* ---------- form ---------- */
+  .field{ margin-bottom:16px; }
+  .field label{ display:block; font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); margin-bottom:7px; }
+  .field input[type="text"], .field input[type="date"], .field input[type="number"], .field input[type="password"], .field textarea{
+    width:100%; background:var(--paper); border:1px solid var(--hairline-strong); border-radius:11px;
+    padding:11px 12px; font-size:14.5px; color:var(--ink);
+  }
+  .field textarea{ resize:vertical; min-height:64px; line-height:1.5; }
+  .field input:focus, .field textarea:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+  .field .err{ font-size:12px; color:var(--danger); margin-top:6px; }
+  .two-col{ display:flex; gap:12px; }
+  .two-col .field{ flex:1; }
+  .chip-row{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{
+    padding:8px 14px; border-radius:999px; border:1px solid var(--hairline-strong);
+    background:var(--paper); font-size:13px; color:var(--ink);
+  }
+  .chip.active{ background:var(--accent); border-color:var(--accent); color:var(--accent-on); font-weight:600; }
+  .form-actions{ display:flex; gap:10px; margin-top:22px; }
+
+  /* ---------- dashboard ---------- */
+  .greeting{ font-family:var(--font-display); font-size:21px; margin:0 0 3px; text-wrap:balance; }
+  .greeting-sub{ font-size:12.5px; color:var(--ink-soft); margin:0 0 18px; }
+
+  .dial-wrap{ display:flex; justify-content:center; padding:6px 0 6px; }
+  .dial{ position:relative; width:206px; height:206px; }
+  .dial-ring{
+    position:absolute; inset:0; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .dial-hole{
+    position:absolute; inset:16px; border-radius:50%; background:var(--paper-raised);
+    border:1px solid var(--hairline);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+    padding:8px;
+  }
+  .dial-hole .day{ font-family:var(--font-display); font-size:38px; line-height:1; }
+  .dial-hole .of{ font-size:11px; color:var(--ink-soft); margin-top:2px; letter-spacing:.03em; }
+  .dial-hole .phase{ margin-top:10px; font-size:13.5px; font-weight:700; }
+  .dial-hole .desc{ font-size:11.5px; color:var(--ink-soft); margin-top:2px; display:flex; align-items:center; gap:4px; }
+  .season-icon{ width:13px; height:13px; display:inline-flex; flex:none; }
+  .season-icon svg{ width:100%; height:100%; }
+  .dial-marker{ position:absolute; inset:0; }
+  .dial-marker-dot{
+    position:absolute; top:1px; left:50%; width:11px; height:11px; margin-left:-5.5px;
+    border-radius:50%; background:var(--paper); border:3px solid var(--accent);
+  }
+  .estimate-badge{
+    display:inline-flex; align-self:center; margin:14px auto 4px; font-size:10.5px;
+    text-transform:uppercase; letter-spacing:.08em; color:var(--ink-soft);
+    border:1px solid var(--hairline-strong); border-radius:999px; padding:4px 10px;
+  }
+  .badge-wrap{ display:flex; justify-content:center; }
+
+  .caution{
+    display:flex; gap:9px; background:var(--ph-lateluteal-soft); border:1px solid var(--hairline);
+    border-radius:12px; padding:11px 12px; font-size:12px; line-height:1.5; color:var(--ink); margin:14px 0;
+  }
+  .caution svg{ width:16px; height:16px; flex:none; margin-top:1px; color:var(--ph-lateluteal); }
+
+  .stat-row{ display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--hairline); }
+  .stat-row:last-child{ border-bottom:0; }
+  .stat-dot{ width:11px; height:11px; border-radius:50%; flex:none; }
+  .stat-row .label{ font-size:13px; color:var(--ink-soft); flex:1; }
+  .stat-row .value{ font-size:13.5px; font-weight:600; font-variant-numeric:tabular-nums; text-align:right; }
+
+  .bullet-list{ margin:0; padding:0; list-style:none; }
+  .bullet-list li{ display:flex; gap:10px; font-size:13.5px; line-height:1.5; padding:7px 0; }
+  .bullet-list li .mark{ flex:none; width:6px; height:6px; border-radius:50%; margin-top:7px; background:var(--accent); }
+  .bullet-list.avoid li .mark{ background:var(--danger); }
+
+  .message-box{
+    background:var(--paper); border:1px dashed var(--hairline-strong); border-radius:12px;
+    padding:13px 14px; font-size:14px; line-height:1.55; font-style:italic; color:var(--ink);
+  }
+  .message-actions{ display:flex; justify-content:flex-end; margin-top:10px; }
+  .link-btn{ background:none; border:0; color:var(--accent); font-size:12.5px; font-weight:600; display:flex; align-items:center; gap:5px; }
+  .link-btn svg{ width:14px; height:14px; }
+
+  /* ---------- timeline ---------- */
+  .seg-row{ display:flex; gap:8px; margin:2px 0 16px; }
+  .seg-btn{ flex:1; padding:9px 6px; border-radius:10px; border:1px solid var(--hairline-strong); background:var(--paper); font-size:12.5px; font-weight:600; color:var(--ink-soft); }
+  .seg-btn.active{ background:var(--accent); border-color:var(--accent); color:var(--accent-on); }
+
+  .legend{ display:flex; flex-wrap:wrap; gap:10px 14px; margin:2px 0 16px; }
+  .legend-item{ display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--ink-soft); }
+  .legend-dot{ width:9px; height:9px; border-radius:3px; flex:none; }
+  .legend-season{ opacity:.75; }
+
+  .cal-weekdays{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:6px; }
+  .cal-weekdays span{ text-align:center; font-size:10px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em; }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .cal-cell{
+    aspect-ratio:1; border-radius:9px; display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-variant-numeric:tabular-nums; color:var(--ink); position:relative;
+    border:1px solid transparent;
+  }
+  .cal-cell.today{ border-color:var(--accent); font-weight:700; }
+  .cal-cell.blank{ color:var(--ink-soft); opacity:.45; }
+  .cal-cell.warn-cell{ flex-direction:column; justify-content:flex-start; gap:3px; padding-top:6px; background:var(--paper); border-color:var(--hairline); }
+  .cal-daynum{ font-size:11.5px; }
+  .dot-row{ display:flex; align-items:center; gap:2px; }
+  .mini-dot{ width:5.5px; height:5.5px; border-radius:50%; flex:none; }
+  .mini-more{ font-size:8px; color:var(--ink-soft); margin-left:1px; }
+
+  /* ---------- notes ---------- */
+  .note-card{ background:var(--paper-raised); border:1px solid var(--hairline); border-radius:14px; padding:14px; margin-bottom:12px; }
+  .note-card .top{ display:flex; align-items:flex-start; gap:8px; }
+  .note-card .title{ font-weight:700; font-size:14px; flex:1; }
+  .note-card .body{ font-size:13.5px; line-height:1.55; color:var(--ink-soft); margin-top:6px; white-space:pre-wrap; }
+  .note-del{ width:28px; height:28px; border-radius:8px; border:1px solid var(--hairline); background:var(--paper); color:var(--ink-soft); display:flex; align-items:center; justify-content:center; flex:none; }
+  .note-del svg{ width:14px; height:14px; }
+  .add-note-toggle{
+    display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
+    border:1px dashed var(--hairline-strong); border-radius:14px; padding:13px; color:var(--accent);
+    font-weight:600; font-size:13.5px; background:transparent; margin-bottom:16px;
+  }
+  .add-note-toggle svg{ width:16px; height:16px; }
+
+  /* ---------- settings ---------- */
+  .settings-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 0; border-bottom:1px solid var(--hairline); }
+  .settings-row:last-child{ border-bottom:0; }
+  .settings-row .t{ font-size:14px; font-weight:600; }
+  .settings-row .s{ font-size:12px; color:var(--ink-soft); margin-top:2px; }
+  .switch{ width:44px; height:26px; border-radius:999px; background:var(--hairline-strong); position:relative; border:0; flex:none; }
+  .switch.on{ background:var(--accent); }
+  .switch .knob{ position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; transition:transform .15s ease; }
+  .switch.on .knob{ transform:translateX(18px); }
+  .privacy-note{ font-size:12px; line-height:1.6; color:var(--ink-soft); background:var(--paper-raised); border:1px solid var(--hairline); border-radius:12px; padding:13px; }
+</style>
+</head>
+<body>
+
+<div class="page-caption">Daybook</div>
+
+<div class="phone" id="phone">
+  <div class="statusbar" id="statusbar"></div>
+  <div class="app-shell">
+    <header class="app-header" id="appHeader"></header>
+    <main class="app-content" id="appContent"></main>
+    <nav class="tabbar" id="tabbar"></nav>
+  </div>
+  <div class="overlay-layer" id="overlayLayer"></div>
+  <div class="modal-layer" id="modalLayer"></div>
+  <div class="toast-layer" id="toastLayer"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ================= icons ================= */
+  var ICONS = {
+    brand: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="12.5" stroke="currentColor" stroke-width="1.6"/><path d="M16 3.5V8M16 24v4.5M3.5 16H8M24 16h4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="16" cy="16" r="4" fill="currentColor"/></svg>',
+    home: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="7.2" stroke="currentColor" stroke-width="1.6"/><path d="M12 4.8V7M12 17v2.2M4.8 12H7M17 12h2.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="12" r="2.1" fill="currentColor"/></svg>',
+    timeline: '<svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="4.5" width="17" height="15" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 9.5h17" stroke="currentColor" stroke-width="1.6"/><path d="M8 3v3M16 3v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="8" cy="14" r="1.2" fill="currentColor"/><circle cx="12" cy="14" r="1.2" fill="currentColor"/><circle cx="16" cy="14" r="1.2" fill="currentColor"/></svg>',
+    notes: '<svg viewBox="0 0 24 24" fill="none"><rect x="5" y="3.5" width="14" height="17" rx="2.4" stroke="currentColor" stroke-width="1.6"/><path d="M8.3 8.5h7.4M8.3 12h7.4M8.3 15.5h4.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+    settings: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M12 3.8v2.6M12 17.6v2.6M20.2 12h-2.6M6.4 12H3.8M17.4 6.6l-1.8 1.8M8.4 15.6l-1.8 1.8M17.4 17.4l-1.8-1.8M8.4 8.4L6.6 6.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+    back: '<svg viewBox="0 0 24 24" fill="none"><path d="M14.5 5 8 12l6.5 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    plus: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+    edit: '<svg viewBox="0 0 24 24" fill="none"><path d="M15.2 4.8l4 4L8.4 19.6l-4.7 1 1-4.7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
+    trash: '<svg viewBox="0 0 24 24" fill="none"><path d="M5 7h14M9.5 7V5.2a1.2 1.2 0 0 1 1.2-1.2h2.6a1.2 1.2 0 0 1 1.2 1.2V7M7 7l.9 12.1a1.6 1.6 0 0 0 1.6 1.5h5a1.6 1.6 0 0 0 1.6-1.5L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    copy: '<svg viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M15 9V6.5A1.5 1.5 0 0 0 13.5 5H6a1.5 1.5 0 0 0-1.5 1.5V15A1.5 1.5 0 0 0 6 16.5H9" stroke="currentColor" stroke-width="1.6"/></svg>',
+    caution: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 4 21 19H3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 10v4.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>',
+    empty: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.4"/><path d="M8.5 12h7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'
+  };
+
+  /* ================= reference data ================= */
+  var RELATIONSHIPS = [
+    { key:'partner', label:'Partner' },
+    { key:'wife', label:'Wife' },
+    { key:'girlfriend', label:'Girlfriend' },
+    { key:'daughter', label:'Daughter' },
+    { key:'friend', label:'Friend' },
+    { key:'other', label:'Other' }
+  ];
+  function relLabel(key){
+    for (var i=0;i<RELATIONSHIPS.length;i++){ if (RELATIONSHIPS[i].key===key) return RELATIONSHIPS[i].label; }
+    return 'Other';
+  }
+
+  var LIFE_STAGES = [
+    { key:'unspecified', label:'Prefer not to say' },
+    { key:'teen', label:'Teens – early 20s' },
+    { key:'typical', label:'20s–30s' },
+    { key:'perimenopause', label:'40s+' }
+  ];
+  function stageLabel(key){
+    for (var i=0;i<LIFE_STAGES.length;i++){ if (LIFE_STAGES[i].key===key) return LIFE_STAGES[i].label; }
+    return null;
+  }
+  var LIFE_STAGE_CAUTION = {
+    teen: "She's in an age range where cycles are often still settling into a pattern, so treat these estimates as a looser guide than usual.",
+    perimenopause: 'Cycles often become less regular during perimenopause, so treat these windows as a looser guide than usual.'
+  };
+
+  var IDENTITY_COLORS = ['#9C6B2E','#4B6A55','#7A5B84','#4F6B79','#8A5A46','#6C6A2E'];
+  function identityColor(id){
+    var h = 0;
+    for (var i=0;i<id.length;i++){ h = (h*31 + id.charCodeAt(i)) >>> 0; }
+    return IDENTITY_COLORS[h % IDENTITY_COLORS.length];
+  }
+
+  var REL_COLORS = {
+    partner: '#6B8577', wife: '#8D7096', girlfriend: '#6E8B99',
+    daughter: '#A67A57', friend: '#8C8A54', other: '#9C8B76'
+  };
+
+  var SEASON_ICONS = {
+    winter: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 3V21M4.8 7.5L19.2 16.5M19.2 7.5L4.8 16.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+    spring: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 21V11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M12 13C8.5 13 6 10.5 6 7c3.5 0 6 2.5 6 6z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M12 11c3.5 0 6-2.5 6-6-3.5 0-6 2.5-6 6z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>',
+    summer: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.3" stroke="currentColor" stroke-width="1.6"/><path d="M12 2.5V5.3M12 18.7V21.5M2.5 12H5.3M18.7 12H21.5M5.6 5.6L7.6 7.6M16.4 16.4L18.4 18.4M18.4 5.6L16.4 7.6M7.6 16.4L5.6 18.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+    autumn: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 21c4-2.3 7-6.6 7-11A7 7 0 0 0 12 3a7 7 0 0 0-7 7c0 4.4 3 8.7 7 11z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 21V6" stroke="currentColor" stroke-width="1.5"/></svg>'
+  };
+
+  var PHASE_META = {
+    menstrual:  { label:'Menstrual',  short:'Bleeding phase',   color:'--ph-menstrual',  soft:'--ph-menstrual-soft',  season:'winter', seasonLabel:'Winter' },
+    follicular: { label:'Follicular', short:'Energy building',  color:'--ph-follicular', soft:'--ph-follicular-soft', season:'spring', seasonLabel:'Spring' },
+    ovulatory:  { label:'Ovulatory',  short:'Fertile window',   color:'--ph-ovulatory',  soft:'--ph-ovulatory-soft',  season:'summer', seasonLabel:'Summer' },
+    luteal:     { label:'Luteal',     short:'Winding down',     color:'--ph-luteal',     soft:'--ph-luteal-soft',     season:'autumn', seasonLabel:'Autumn' },
+    lateluteal: { label:'Late Luteal · PMS', short:'Pre-period window', color:'--ph-lateluteal', soft:'--ph-lateluteal-soft', season:'autumn', seasonLabel:'Late Autumn' }
+  };
+
+  var PHASE_CONTENT = {
+    menstrual: {
+      support: [
+        'Handle the small logistics without being asked — dishes, errands, dinner plans.',
+        'Keep check-ins light. A "thinking of you" text lands better than twenty questions.',
+        'Have her go-to comfort items ready before she has to ask for them.'
+      ],
+      avoid: [
+        "Don't schedule anything high-energy or socially demanding without checking in first.",
+        'Skip the "are you on your period" guess-game — it reads as clinical, not caring.'
+      ],
+      message: "No pressure on anything today — I've got dinner covered. Let me know if you want company or space."
+    },
+    follicular: {
+      support: [
+        'This window is good for planning — trips, projects, ambitious conversations tend to land well.',
+        "Match her energy. If she's proposing something new, say yes before you overthink it.",
+        'Give her room to run with ideas instead of talking her out of them.'
+      ],
+      avoid: [
+        "Don't assume every day feels like period week — check in fresh.",
+        'Don\'t hold plans back "to be safe" — this window usually has more bandwidth, not less.'
+      ],
+      message: "You've seemed extra sharp this week — want to finally do that thing we've been putting off?"
+    },
+    ovulatory: {
+      support: [
+        'She may be more social and outgoing than usual — good window for plans with others.',
+        'Confidence tends to run high; genuine appreciation lands well right now.',
+        "Good time for a harder conversation if you've been avoiding one — she's often more articulate and less reactive."
+      ],
+      avoid: [
+        "Don't mistake higher energy for availability for everything — she can still be busy or tired.",
+        "Don't make it about fertility or \"trying\" unless that's an active, explicit conversation between you two."
+      ],
+      message: "You've got that spark today — want to do something tonight?"
+    },
+    luteal: {
+      support: [
+        'Energy may start easing off — lower-key plans tend to go over better than big nights out.',
+        'Patience helps more than problem-solving; sometimes she needs to vent, not troubleshoot.',
+        'Small, unprompted acts of care — tea, taking something off her plate — go a long way here.'
+      ],
+      avoid: [
+        "Don't take a shorter fuse personally — it's often circumstantial, not about you.",
+        'Don\'t bring up unresolved arguments hoping to "finally settle it" this week.'
+      ],
+      message: "No agenda tonight — just want to hang out, your call on what that looks like."
+    },
+    lateluteal: {
+      support: [
+        'Lower the bar for the day — comfort and predictability matter more than ambition right now.',
+        'Ask directly what would help instead of guessing; the answer varies person to person.',
+        'Give extra grace around mood swings — they\'re real, physiological, and temporary.'
+      ],
+      avoid: [
+        'Don\'t say "are you PMSing" mid-disagreement — it dismisses whatever she\'s actually saying.',
+        "Don't plan big decisions or confrontations for this window if you can help it."
+      ],
+      message: "Rough few days coming up for you, probably — anything I can take off your plate?"
+    }
+  };
+
+  /* ================= date helpers ================= */
+  var DAY_MS = 86400000;
+  function startOfDay(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+  function addDays(d, n){ var r = new Date(d); r.setDate(r.getDate()+n); return r; }
+  function isoDate(d){ return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); }
+  function pad2(n){ return n<10 ? '0'+n : ''+n; }
+  function parseISO(s){ var p = s.split('-'); return new Date(+p[0], +p[1]-1, +p[2]); }
+  function fmtShort(d){ return d.toLocaleDateString(undefined, { month:'short', day:'numeric' }); }
+  function fmtLong(d){ return d.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' }); }
+  function clamp(n, lo, hi){ return Math.max(lo, Math.min(hi, n)); }
+  function todayISO(){ return isoDate(startOfDay(new Date())); }
+
+  /* ================= cycle math ================= */
+  function boundaries(cycleLen, periodLen){
+    var ovulationDay = clamp(cycleLen - 14, periodLen + 1, cycleLen);
+    var fertileStart = clamp(ovulationDay - 4, periodLen + 1, cycleLen);
+    var fertileEnd = clamp(ovulationDay + 1, fertileStart, cycleLen);
+    var lateLutealStart = clamp(cycleLen - 4, 1, cycleLen);
+    return { fertileStart: fertileStart, fertileEnd: fertileEnd, lateLutealStart: lateLutealStart };
+  }
+  function classifyDay(day, periodLen, b){
+    if (day <= periodLen) return 'menstrual';
+    if (day >= b.fertileStart && day <= b.fertileEnd) return 'ovulatory';
+    if (day >= b.lateLutealStart) return 'lateluteal';
+    if (day < b.fertileStart) return 'follicular';
+    return 'luteal';
+  }
+
+  function computeCycleInfo(p, today){
+    var start = startOfDay(parseISO(p.lastPeriodStart));
+    var t = startOfDay(today);
+    var cycleLen = p.avgCycleLength;
+    var periodLen = p.avgPeriodLength;
+    var daysSince = Math.max(0, Math.round((t - start) / DAY_MS));
+    var cyclesElapsed = Math.floor(daysSince / cycleLen);
+    var cycleDay = (daysSince % cycleLen) + 1;
+    var cycleStart = addDays(start, cyclesElapsed * cycleLen);
+    var nextPeriodStart = addDays(cycleStart, cycleLen);
+    var b = boundaries(cycleLen, periodLen);
+    var phaseKey = classifyDay(cycleDay, periodLen, b);
+
+    var segments = [];
+    var segStart = 1, curPhase = classifyDay(1, periodLen, b);
+    for (var d = 2; d <= cycleLen + 1; d++){
+      var ph = d <= cycleLen ? classifyDay(d, periodLen, b) : null;
+      if (ph !== curPhase){
+        segments.push({ phase: curPhase, start: segStart, end: d - 1 });
+        segStart = d; curPhase = ph;
+      }
+    }
+
+    var cautions = [];
+    if (cycleLen < 21 || (periodLen / cycleLen) > 0.32){
+      cautions.push('Her average cycle is on the shorter side, so these windows may overlap more than usual — treat them as a rough guide.');
+    }
+    if (p.lifeStage && LIFE_STAGE_CAUTION[p.lifeStage]){
+      cautions.push(LIFE_STAGE_CAUTION[p.lifeStage]);
+    }
+
+    return {
+      cycleDay: cycleDay, cycleLen: cycleLen, periodLen: periodLen, phaseKey: phaseKey,
+      cycleStart: cycleStart, nextPeriodStart: nextPeriodStart,
+      periodWindow: { start: cycleStart, end: addDays(cycleStart, periodLen - 1) },
+      fertileWindow: { start: addDays(cycleStart, b.fertileStart - 1), end: addDays(cycleStart, b.fertileEnd - 1) },
+      lateLutealWindow: { start: addDays(cycleStart, b.lateLutealStart - 1), end: addDays(cycleStart, cycleLen - 1) },
+      segments: segments, cautions: cautions, boundaries: b
+    };
+  }
+
+  function phaseForDate(p, date){
+    var start = startOfDay(parseISO(p.lastPeriodStart));
+    var t = startOfDay(date);
+    var daysSince = Math.round((t - start) / DAY_MS);
+    if (daysSince < 0) return null;
+    var b = boundaries(p.avgCycleLength, p.avgPeriodLength);
+    var cycleDay = (daysSince % p.avgCycleLength) + 1;
+    return classifyDay(cycleDay, p.avgPeriodLength, b);
+  }
+
+  function calendarGrid(p, today, weeks){
+    var t = startOfDay(today);
+    var gridStart = addDays(t, -t.getDay());
+    var cells = [];
+    var total = weeks * 7;
+    for (var i = 0; i < total; i++){
+      var date = addDays(gridStart, i);
+      var cell = { date: date, isToday: isoDate(date) === isoDate(t), phase: phaseForDate(p, date) };
+      cells.push(cell);
+    }
+    return cells;
+  }
+
+  /* ================= demo data ================= */
+  function genId(prefix){ return prefix + '_' + Math.random().toString(36).slice(2, 9); }
+
+  function demoProfiles(){
+    return [
+      {
+        id: 'p1', name: 'Mara', relationship: 'partner', lifeStage: 'typical',
+        lastPeriodStart: '2026-07-14', avgCycleLength: 29, avgPeriodLength: 5,
+        notes: 'Prefers a heads-up before plans rather than surprises.',
+        notesList: [
+          { id: genId('n'), title: 'Coffee order', body: 'Oat milk latte, extra shot, no sugar.' },
+          { id: genId('n'), title: 'Headache pattern', body: 'Gets tension headaches on day 1–2 of her period. A dark, quiet room helps more than talking.' }
+        ]
+      },
+      {
+        id: 'p2', name: 'Josie', relationship: 'friend', lifeStage: 'perimenopause',
+        lastPeriodStart: '2026-07-01', avgCycleLength: 27, avgPeriodLength: 4,
+        notes: '',
+        notesList: [
+          { id: genId('n'), title: 'Comfort show', body: 'Rewatches old sitcom reruns when stressed — never a new show.' },
+          { id: genId('n'), title: 'Snack note', body: 'Dark chocolate, not milk. Always keep some around the week before her period.' }
+        ]
+      }
+    ];
+  }
+
+  /* ================= access gate ================= */
+  var PASSCODE_HASH = '48deb732e8de8fe7995bbc2816520798fcab815f62165af4d53bbc24434c963e';
+  function sha256Hex(str){
+    var enc = new TextEncoder().encode(str);
+    return crypto.subtle.digest('SHA-256', enc).then(function(buf){
+      return Array.prototype.map.call(new Uint8Array(buf), function(b){ return b.toString(16).padStart(2, '0'); }).join('');
+    });
+  }
+
+  /* ================= app state ================= */
+  var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  var state = {
+    unlocked: false,
+    lockError: null,
+    profiles: demoProfiles(),
+    selectedProfileId: 'p1',
+    route: 'home',
+    overlay: 'onboarding',
+    theme: prefersDark ? 'dark' : 'light',
+    confirmDialog: null,
+    toast: null,
+    profileForm: null,
+    editingProfileId: null,
+    timelineView: 'mine',
+    noteFormOpen: false,
+    noteDraft: { title: '', body: '' }
+  };
+  var toastTimer = null;
+
+  function getProfile(id){
+    for (var i=0;i<state.profiles.length;i++){ if (state.profiles[i].id === id) return state.profiles[i]; }
+    return null;
+  }
+  function selectedProfile(){ return getProfile(state.selectedProfileId); }
+
+  function showToast(msg){
+    state.toast = msg;
+    render();
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ state.toast = null; render(); }, 2200);
+  }
+
+  /* ================= validation ================= */
+  function emptyDraft(){
+    return { name:'', relationship:'partner', lifeStage:'unspecified', lastPeriodStart:'', avgCycleLength:'28', avgPeriodLength:'5', notes:'' };
+  }
+  function draftFromProfile(p){
+    return { name:p.name, relationship:p.relationship, lifeStage:p.lifeStage || 'unspecified', lastPeriodStart:p.lastPeriodStart, avgCycleLength:String(p.avgCycleLength), avgPeriodLength:String(p.avgPeriodLength), notes:p.notes || '' };
+  }
+  function validateDraft(d){
+    var errors = {};
+    if (!d.name || !d.name.trim()) errors.name = 'Add a name or nickname.';
+    else if (d.name.trim().length > 40) errors.name = 'Keep it under 40 characters.';
+
+    if (!d.lastPeriodStart) errors.lastPeriodStart = "Enter the date her last period started.";
+    else if (d.lastPeriodStart > todayISO()) errors.lastPeriodStart = "This date can't be in the future.";
+
+    var cyc = parseInt(d.avgCycleLength, 10);
+    if (!cyc || cyc < 18 || cyc > 45) errors.avgCycleLength = 'Cycle length should be 18–45 days.';
+
+    var per = parseInt(d.avgPeriodLength, 10);
+    if (!per || per < 1 || per > 10) errors.avgPeriodLength = 'Period length should be 1–10 days.';
+    else if (cyc && per >= cyc) errors.avgPeriodLength = 'Should be shorter than the cycle length.';
+
+    return errors;
+  }
+
+  /* ================= actions ================= */
+  var actions = {
+    'attempt-unlock': function(){
+      var input = document.getElementById('lockInput');
+      var val = input ? input.value : '';
+      sha256Hex(val).then(function(hex){
+        if (hex === PASSCODE_HASH){
+          state.unlocked = true; state.lockError = null; render();
+        } else {
+          state.lockError = 'Incorrect code — try again.'; render();
+          var el = document.getElementById('lockInput');
+          if (el) el.focus();
+        }
+      });
+    },
+    'onboarding-continue': function(){
+      state.overlay = null; render();
+    },
+    'go-tab': function(btn){
+      state.route = btn.getAttribute('data-tab');
+      state.noteFormOpen = false;
+      render();
+    },
+    'set-timeline-view': function(btn){
+      state.timelineView = btn.getAttribute('data-view'); render();
+    },
+    'open-switcher': function(){
+      state.overlay = 'switcher'; render();
+    },
+    'close-overlay': function(){
+      state.overlay = null; state.profileForm = null; state.editingProfileId = null; render();
+    },
+    'select-profile': function(btn, id){
+      state.selectedProfileId = id; state.overlay = null; state.route = 'home'; render();
+    },
+    'new-profile': function(){
+      state.editingProfileId = null; state.profileForm = emptyDraft(); state.formErrors = {}; state.overlay = 'form'; render();
+    },
+    'edit-profile': function(btn, id){
+      var p = getProfile(id);
+      state.editingProfileId = id; state.profileForm = draftFromProfile(p); state.formErrors = {}; state.overlay = 'form'; render();
+    },
+    'select-relationship': function(btn){
+      state.profileForm.relationship = btn.getAttribute('data-rel'); render();
+    },
+    'select-lifestage': function(btn){
+      state.profileForm.lifeStage = btn.getAttribute('data-stage'); render();
+    },
+    'save-profile': function(){
+      var errors = validateDraft(state.profileForm);
+      state.formErrors = errors;
+      if (Object.keys(errors).length){ render(); return; }
+      var d = state.profileForm;
+      if (state.editingProfileId){
+        var p = getProfile(state.editingProfileId);
+        p.name = d.name.trim(); p.relationship = d.relationship; p.lifeStage = d.lifeStage; p.lastPeriodStart = d.lastPeriodStart;
+        p.avgCycleLength = parseInt(d.avgCycleLength,10); p.avgPeriodLength = parseInt(d.avgPeriodLength,10);
+        p.notes = d.notes.trim();
+        showToast('Profile updated');
+      } else {
+        var np = {
+          id: genId('p'), name: d.name.trim(), relationship: d.relationship, lifeStage: d.lifeStage,
+          lastPeriodStart: d.lastPeriodStart, avgCycleLength: parseInt(d.avgCycleLength,10),
+          avgPeriodLength: parseInt(d.avgPeriodLength,10), notes: d.notes.trim(), notesList: []
+        };
+        state.profiles.push(np);
+        state.selectedProfileId = np.id;
+        showToast('Profile added');
+      }
+      state.overlay = null; state.profileForm = null; state.editingProfileId = null; state.route = 'home';
+      render();
+    },
+    'delete-profile-request': function(btn, id){
+      var p = getProfile(id);
+      state.confirmDialog = {
+        title: 'Delete ' + p.name + '?', body: 'This removes their profile and notes from this session. It cannot be undone.',
+        confirmLabel: 'Delete', action: 'delete-profile-confirm', actionId: id
+      };
+      render();
+    },
+    'delete-profile-confirm': function(btn, id){
+      state.profiles = state.profiles.filter(function(p){ return p.id !== id; });
+      if (state.selectedProfileId === id){
+        state.selectedProfileId = state.profiles.length ? state.profiles[0].id : null;
+      }
+      state.confirmDialog = null; state.overlay = null; state.profileForm = null; state.editingProfileId = null;
+      showToast('Profile deleted');
+    },
+    'delete-profile-from-form': function(){
+      actions['delete-profile-request'](null, state.editingProfileId);
+    },
+    'toggle-theme': function(){
+      state.theme = state.theme === 'dark' ? 'light' : 'dark'; render();
+    },
+    'clear-data-request': function(){
+      state.confirmDialog = {
+        title: 'Clear all data?', body: 'This removes every profile and note from this session.',
+        confirmLabel: 'Clear data', action: 'clear-data-confirm'
+      };
+      render();
+    },
+    'clear-data-confirm': function(){
+      state.profiles = []; state.selectedProfileId = null;
+      state.confirmDialog = null;
+      showToast('Data cleared');
+    },
+    'reset-app-request': function(){
+      state.confirmDialog = {
+        title: 'Reset app state?', body: 'This restores the two example profiles and their notes.',
+        confirmLabel: 'Reset', action: 'reset-app-confirm'
+      };
+      render();
+    },
+    'reset-app-confirm': function(){
+      state.profiles = demoProfiles(); state.selectedProfileId = 'p1'; state.route = 'home';
+      state.confirmDialog = null;
+      showToast('App state reset');
+    },
+    'dismiss-modal': function(){ state.confirmDialog = null; render(); },
+    'confirm-modal': function(){
+      var c = state.confirmDialog;
+      if (c && actions[c.action]) actions[c.action](null, c.actionId);
+      render();
+    },
+    'toggle-note-form': function(){
+      state.noteFormOpen = !state.noteFormOpen; state.noteDraft = { title:'', body:'' }; render();
+    },
+    'save-note': function(){
+      var p = selectedProfile();
+      var t = state.noteDraft.title.trim(), b = state.noteDraft.body.trim();
+      if (!t || !b){ state.noteError = 'Add both a title and a note.'; render(); return; }
+      p.notesList.unshift({ id: genId('n'), title: t, body: b });
+      state.noteFormOpen = false; state.noteDraft = { title:'', body:'' }; state.noteError = null;
+      showToast('Note added');
+    },
+    'delete-note-request': function(btn, id){
+      state.confirmDialog = {
+        title: 'Delete this note?', body: 'This note will be permanently removed from this session.',
+        confirmLabel: 'Delete', action: 'delete-note-confirm', actionId: id
+      };
+      render();
+    },
+    'delete-note-confirm': function(btn, id){
+      var p = selectedProfile();
+      if (p) p.notesList = p.notesList.filter(function(n){ return n.id !== id; });
+      state.confirmDialog = null;
+      showToast('Note deleted');
+    },
+    'copy-message': function(btn){
+      var msg = btn.getAttribute('data-msg');
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(msg).then(function(){ showToast('Message copied'); }).catch(function(){ showToast('Could not copy'); });
+      } else {
+        showToast('Copy not supported here');
+      }
+    }
+  };
+
+  /* ================= draft field sync (no full re-render on keystroke) ================= */
+  function bindDraftInputs(){
+    var phone = document.getElementById('phone');
+    phone.oninput = function(e){
+      var el = e.target;
+      var field = el.getAttribute('data-field');
+      if (!field) return;
+      var draft = el.getAttribute('data-draft');
+      if (draft === 'profile' && state.profileForm) state.profileForm[field] = el.value;
+      if (draft === 'note') state.noteDraft[field] = el.value;
+    };
+  }
+
+  /* ================= render: pieces ================= */
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+    });
+  }
+
+  function renderStatusbar(){
+    var d = new Date();
+    var h = d.getHours(), m = d.getMinutes();
+    var hh = ((h % 12) || 12);
+    document.getElementById('statusbar').textContent = hh + ':' + pad2(m) + ' ' + (h >= 12 ? 'PM' : 'AM');
+  }
+
+  function renderHeader(){
+    var el = document.getElementById('appHeader');
+    if (state.overlay === 'onboarding'){ el.innerHTML = ''; el.style.display = 'none'; return; }
+    el.style.display = 'flex';
+
+    if (state.overlay === 'switcher'){
+      el.innerHTML =
+        '<button class="icon-btn" data-action="close-overlay" aria-label="Back">' + ICONS.back + '</button>' +
+        '<span class="header-title">Profiles</span>';
+      return;
+    }
+    if (state.overlay === 'form'){
+      el.innerHTML =
+        '<button class="icon-btn" data-action="close-overlay" aria-label="Back">' + ICONS.back + '</button>' +
+        '<span class="header-title">' + (state.editingProfileId ? 'Edit profile' : 'Add profile') + '</span>';
+      return;
+    }
+
+    var p = selectedProfile();
+    var chip = p
+      ? '<button class="profile-chip" data-action="open-switcher">' +
+          '<span class="avatar" style="background:' + identityColor(p.id) + '">' + esc(p.name.charAt(0).toUpperCase()) + '</span>' +
+          '<span><span class="name">' + esc(p.name) + '</span><br><span class="rel">' + esc(relLabel(p.relationship)) + '</span></span>' +
+        '</button>'
+      : '<button class="profile-chip" data-action="open-switcher"><span class="name">Add a profile</span></button>';
+
+    el.innerHTML =
+      '<div class="brand-mark"><span class="brand-glyph">' + ICONS.brand + '</span><span class="brand-name">Daybook</span></div>' +
+      chip;
+  }
+
+  function renderTabbar(){
+    var el = document.getElementById('tabbar');
+    if (state.overlay){ el.style.display = 'none'; return; }
+    el.style.display = 'flex';
+    var tabs = [
+      { key:'home', label:'Home', icon:ICONS.home },
+      { key:'timeline', label:'Timeline', icon:ICONS.timeline },
+      { key:'notes', label:'Notes', icon:ICONS.notes },
+      { key:'settings', label:'Settings', icon:ICONS.settings }
+    ];
+    el.innerHTML = tabs.map(function(t){
+      return '<button class="tab' + (state.route === t.key ? ' active' : '') + '" data-action="go-tab" data-tab="' + t.key + '">' +
+        t.icon + '<span>' + t.label + '</span></button>';
+    }).join('');
+  }
+
+  function sectionLabel(text){
+    return '<div class="section-label">' + esc(text) + '<span class="rule"></span></div>';
+  }
+
+  function emptyProfileState(message){
+    return '<div class="empty-state">' + ICONS.empty +
+      '<h3>No one to show yet</h3><p>' + esc(message) + '</p>' +
+      '<button class="btn btn-primary" data-action="open-switcher" style="width:auto;padding:11px 22px;">Add a profile</button></div>';
+  }
+
+  /* ---- Home / dashboard ---- */
+  function renderHome(){
+    var p = selectedProfile();
+    if (!p) return emptyProfileState('Add someone you want to understand and support better.');
+
+    var info = computeCycleInfo(p, new Date());
+    var meta = PHASE_META[info.phaseKey];
+    var content = PHASE_CONTENT[info.phaseKey];
+
+    var gradient = 'conic-gradient(from 0deg,';
+    var stops = [];
+    info.segments.forEach(function(seg){
+      var col = 'var(' + PHASE_META[seg.phase].color + ')';
+      var pctStart = ((seg.start - 1) / info.cycleLen) * 100;
+      var pctEnd = (seg.end / info.cycleLen) * 100;
+      stops.push(col + ' ' + pctStart.toFixed(2) + '%');
+      stops.push(col + ' ' + pctEnd.toFixed(2) + '%');
+    });
+    gradient += stops.join(',') + ')';
+
+    var markerDeg = ((info.cycleDay - 0.5) / info.cycleLen) * 360;
+
+    var html = '';
+    html += '<h1 class="greeting">Today with ' + esc(p.name) + '</h1>';
+    html += '<p class="greeting-sub">' + fmtLong(new Date()) + '</p>';
+
+    html += '<div class="dial-wrap"><div class="dial">' +
+      '<div class="dial-ring" style="background:' + gradient + '"></div>' +
+      '<div class="dial-marker" style="transform:rotate(' + markerDeg.toFixed(1) + 'deg)"><span class="dial-marker-dot"></span></div>' +
+      '<div class="dial-hole">' +
+        '<span class="day">' + info.cycleDay + '</span>' +
+        '<span class="of">of ~' + info.cycleLen + ' days</span>' +
+        '<span class="phase" style="color:var(' + meta.color + ')">' + meta.label + '</span>' +
+        '<span class="desc"><span class="season-icon">' + SEASON_ICONS[meta.season] + '</span>' + meta.seasonLabel + ' · ' + meta.short + '</span>' +
+      '</div></div></div>';
+    html += '<div class="badge-wrap"><span class="estimate-badge">Estimate, not a diagnosis</span></div>';
+
+    info.cautions.forEach(function(msg){
+      html += '<div class="caution">' + ICONS.caution + '<span>' + esc(msg) + '</span></div>';
+    });
+
+    html += '<div class="card">' + sectionLabel('Coming up') +
+      statRow(PHASE_META.menstrual.color, 'Next period', fmtShort(info.nextPeriodStart)) +
+      statRow(PHASE_META.ovulatory.color, 'Fertile window', fmtShort(info.fertileWindow.start) + ' – ' + fmtShort(info.fertileWindow.end)) +
+      statRow(PHASE_META.lateluteal.color, 'Late luteal / PMS', fmtShort(info.lateLutealWindow.start) + ' – ' + fmtShort(info.lateLutealWindow.end)) +
+      '</div>';
+
+    html += '<div class="card">' + sectionLabel('How to show up today') +
+      '<ul class="bullet-list">' + content.support.map(function(s){ return '<li><span class="mark"></span>' + esc(s) + '</li>'; }).join('') + '</ul></div>';
+
+    html += '<div class="card">' + sectionLabel('What to ease up on') +
+      '<ul class="bullet-list avoid">' + content.avoid.map(function(s){ return '<li><span class="mark"></span>' + esc(s) + '</li>'; }).join('') + '</ul></div>';
+
+    html += '<div class="card">' + sectionLabel('A message you could send') +
+      '<div class="message-box">' + esc(content.message) + '</div>' +
+      '<div class="message-actions"><button class="link-btn" data-action="copy-message" data-msg="' + esc(content.message) + '">' + ICONS.copy + 'Copy</button></div></div>';
+
+    if (p.notes){
+      html += '<div class="card">' + sectionLabel('General notes') + '<p style="margin:0;font-size:13.5px;line-height:1.55;color:var(--ink-soft);">' + esc(p.notes) + '</p></div>';
+    }
+
+    return html;
+  }
+  function statRow(colorVar, label, value){
+    return '<div class="stat-row"><span class="stat-dot" style="background:var(' + colorVar + ')"></span>' +
+      '<span class="label">' + esc(label) + '</span><span class="value">' + esc(value) + '</span></div>';
+  }
+
+  /* ---- Timeline ---- */
+  var WEEKDAY_LABELS = ['S','M','T','W','T','F','S'];
+
+  function renderTimeline(){
+    if (!state.profiles.length) return emptyProfileState('Add a profile to see their cycle timeline.');
+
+    var mine = state.timelineView !== 'warning';
+    var html = '<h1 class="greeting">Timeline</h1>';
+    html += '<div class="seg-row">' +
+      '<button class="seg-btn' + (mine ? ' active' : '') + '" data-action="set-timeline-view" data-view="mine">My Timeline</button>' +
+      '<button class="seg-btn' + (!mine ? ' active' : '') + '" data-action="set-timeline-view" data-view="warning">Early Warning</button>' +
+      '</div>';
+
+    html += mine ? renderMyTimeline() : renderEarlyWarning();
+    return html;
+  }
+
+  function renderMyTimeline(){
+    var p = selectedProfile();
+    if (!p) return emptyProfileState('Add a profile to see their cycle timeline.');
+
+    var cells = calendarGrid(p, new Date(), 6);
+
+    var html = '<p class="greeting-sub">Six-week preview for ' + esc(p.name) + '</p>';
+
+    html += '<div class="legend">';
+    ['menstrual','follicular','ovulatory','luteal','lateluteal'].forEach(function(k){
+      var meta = PHASE_META[k];
+      html += '<span class="legend-item"><span class="legend-dot" style="background:var(' + meta.color + ')"></span>' + meta.label + ' <span class="legend-season">(' + meta.seasonLabel + ')</span></span>';
+    });
+    html += '</div>';
+
+    html += '<div class="cal-weekdays">' + WEEKDAY_LABELS.map(function(w){ return '<span>' + w + '</span>'; }).join('') + '</div>';
+    html += '<div class="cal-grid">';
+    cells.forEach(function(c){
+      if (c.phase === null){
+        html += '<div class="cal-cell blank">' + c.date.getDate() + '</div>';
+      } else {
+        var meta = PHASE_META[c.phase];
+        html += '<div class="cal-cell' + (c.isToday ? ' today' : '') + '" style="background:var(' + meta.soft + ');color:var(' + meta.color + ')">' + c.date.getDate() + '</div>';
+      }
+    });
+    html += '</div>';
+
+    html += '<p style="font-size:11.5px;color:var(--ink-soft);margin-top:16px;line-height:1.5;">Estimates only — actual timing can vary cycle to cycle.</p>';
+    return html;
+  }
+
+  function renderEarlyWarning(){
+    var today = new Date();
+    var t = startOfDay(today);
+    var gridStart = addDays(t, -t.getDay());
+    var weeks = 6;
+
+    var usedRels = {};
+    state.profiles.forEach(function(p){ usedRels[p.relationship] = true; });
+
+    var cells = [];
+    for (var i = 0; i < weeks * 7; i++){
+      var date = addDays(gridStart, i);
+      var dots = [];
+      state.profiles.forEach(function(p){
+        if (phaseForDate(p, date) === 'lateluteal') dots.push(REL_COLORS[p.relationship] || REL_COLORS.other);
+      });
+      cells.push({ date: date, isToday: isoDate(date) === isoDate(t), dots: dots });
+    }
+
+    var html = '<p class="greeting-sub">No names — just relationship type, for a quick heads-up on who\'s heading into a PMS window.</p>';
+
+    html += '<div class="legend">';
+    RELATIONSHIPS.forEach(function(r){
+      if (usedRels[r.key]) html += '<span class="legend-item"><span class="legend-dot" style="background:' + REL_COLORS[r.key] + '"></span>' + r.label + '</span>';
+    });
+    html += '</div>';
+
+    html += '<div class="cal-weekdays">' + WEEKDAY_LABELS.map(function(w){ return '<span>' + w + '</span>'; }).join('') + '</div>';
+    html += '<div class="cal-grid">';
+    cells.forEach(function(c){
+      html += '<div class="cal-cell warn-cell' + (c.isToday ? ' today' : '') + '">' +
+        '<span class="cal-daynum">' + c.date.getDate() + '</span>';
+      if (c.dots.length){
+        html += '<span class="dot-row">' + c.dots.slice(0, 4).map(function(col){
+          return '<span class="mini-dot" style="background:' + col + '"></span>';
+        }).join('') + (c.dots.length > 4 ? '<span class="mini-more">+' + (c.dots.length - 4) + '</span>' : '') + '</span>';
+      }
+      html += '</div>';
+    });
+    html += '</div>';
+
+    html += '<p style="font-size:11.5px;color:var(--ink-soft);margin-top:16px;line-height:1.5;">Shows only the late luteal / PMS window for each profile — estimates only, no names shown.</p>';
+    return html;
+  }
+
+  /* ---- Notes ---- */
+  function renderNotes(){
+    var p = selectedProfile();
+    if (!p) return emptyProfileState('Add a profile to start keeping notes.');
+
+    var html = '<h1 class="greeting">Notes</h1><p class="greeting-sub">Private notes about ' + esc(p.name) + '</p>';
+
+    if (state.noteFormOpen){
+      html += '<div class="card">' +
+        '<div class="field"><label>Title</label><input type="text" data-draft="note" data-field="title" value="' + esc(state.noteDraft.title) + '" placeholder="e.g. Favorite comfort food" /></div>' +
+        '<div class="field"><label>Note</label><textarea data-draft="note" data-field="body" placeholder="Preferences, recurring symptoms, helpful reminders…">' + esc(state.noteDraft.body) + '</textarea></div>' +
+        (state.noteError ? '<div class="err" style="margin-bottom:12px;">' + esc(state.noteError) + '</div>' : '') +
+        '<div class="form-actions"><button class="btn btn-ghost" data-action="toggle-note-form">Cancel</button><button class="btn btn-primary" data-action="save-note">Save note</button></div>' +
+        '</div>';
+    } else {
+      html += '<button class="add-note-toggle" data-action="toggle-note-form">' + ICONS.plus + 'Add a note</button>';
+    }
+
+    if (!p.notesList.length){
+      html += '<div class="empty-state">' + ICONS.empty + '<h3>No notes yet</h3><p>Jot down preferences, recurring symptoms, or reminders that help you show up better.</p></div>';
+    } else {
+      p.notesList.forEach(function(n){
+        html += '<div class="note-card"><div class="top"><span class="title">' + esc(n.title) + '</span>' +
+          '<button class="note-del" data-action="delete-note-request" data-id="' + n.id + '">' + ICONS.trash + '</button></div>' +
+          '<div class="body">' + esc(n.body) + '</div></div>';
+      });
+    }
+    return html;
+  }
+
+  /* ---- Settings ---- */
+  function renderSettings(){
+    var html = '<h1 class="greeting">Settings</h1><p class="greeting-sub">Daybook, personal build</p>';
+
+    html += '<div class="card">' +
+      '<div class="settings-row"><div><div class="t">Dark mode</div><div class="s">Applies to the app only</div></div>' +
+      '<button class="switch' + (state.theme === 'dark' ? ' on' : '') + '" data-action="toggle-theme" aria-label="Toggle dark mode"><span class="knob"></span></button></div>' +
+      '</div>';
+
+    html += '<div class="card">' +
+      '<div class="settings-row"><div><div class="t">Clear demo data</div><div class="s">Removes all profiles and notes</div></div>' +
+      '<button class="btn btn-danger btn-sm" data-action="clear-data-request">Clear</button></div>' +
+      '<div class="settings-row"><div><div class="t">Reset app state</div><div class="s">Restores the two example profiles</div></div>' +
+      '<button class="btn btn-ghost btn-sm" data-action="reset-app-request">Reset</button></div>' +
+      '</div>';
+
+    html += '<div class="privacy-note">Daybook is a personal planning aid, not a medical device. Estimates are approximations based on averages you enter and can be wrong. All data lives in this session only — nothing is saved, synced, or sent anywhere, and it disappears when you close or reload the app.</div>';
+    return html;
+  }
+
+  /* ---- Onboarding overlay ---- */
+  function renderOnboarding(){
+    return '<div class="onboard">' +
+      '<span class="onboard-glyph">' + ICONS.brand + '</span>' +
+      '<h1>A quieter way to pay attention</h1>' +
+      '<p>Daybook turns a few simple dates into a rough sense of where someone is in their cycle, so you can time your support instead of guessing.</p>' +
+      '<p>It estimates — it does not diagnose, and it is not medical advice. Treat everything here as a starting point for empathy, not a certainty.</p>' +
+      '<button class="btn btn-primary" data-action="onboarding-continue" style="margin-top:6px;">Got it — let\'s go</button>' +
+      '<p class="fine">Everything you enter stays in this browser session only. Nothing is saved once you close or reload the app.</p>' +
+      '</div>';
+  }
+
+  /* ---- Switcher overlay (profile list) ---- */
+  function renderSwitcher(){
+    var html = '<div class="app-content" style="padding-top:18px;">';
+    if (!state.profiles.length){
+      html += emptyProfileState('Add the people you want to understand and support better — up to a handful of profiles.');
+    } else {
+      state.profiles.forEach(function(p){
+        var selected = p.id === state.selectedProfileId;
+        html += '<div class="profile-card' + (selected ? ' selected' : '') + '">' +
+          '<button data-action="select-profile" data-id="' + p.id + '" style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;background:none;border:0;text-align:left;">' +
+          '<span class="avatar lg" style="background:' + identityColor(p.id) + '">' + esc(p.name.charAt(0).toUpperCase()) + '</span>' +
+          '<span class="info"><span class="n">' + esc(p.name) + '</span><div class="r">' + esc(relLabel(p.relationship) + (p.lifeStage && p.lifeStage !== 'unspecified' ? ' · ' + stageLabel(p.lifeStage) : '')) + '</div>' +
+          '<div class="d">Last period: ' + fmtShort(parseISO(p.lastPeriodStart)) + '</div></span></button>' +
+          '<span class="row-actions">' +
+          '<button data-action="edit-profile" data-id="' + p.id + '" aria-label="Edit">' + ICONS.edit + '</button>' +
+          '<button data-action="delete-profile-request" data-id="' + p.id + '" aria-label="Delete">' + ICONS.trash + '</button>' +
+          '</span></div>';
+      });
+    }
+    html += '</div><button class="fab" data-action="new-profile" aria-label="Add profile">' + ICONS.plus + '</button>';
+    return html;
+  }
+
+  /* ---- Profile form overlay ---- */
+  function relChips(current){
+    return '<div class="chip-row">' + RELATIONSHIPS.map(function(r){
+      return '<button type="button" class="chip' + (current === r.key ? ' active' : '') + '" data-action="select-relationship" data-rel="' + r.key + '">' + r.label + '</button>';
+    }).join('') + '</div>';
+  }
+  function stageChips(current){
+    return '<div class="chip-row">' + LIFE_STAGES.map(function(s){
+      return '<button type="button" class="chip' + (current === s.key ? ' active' : '') + '" data-action="select-lifestage" data-stage="' + s.key + '">' + s.label + '</button>';
+    }).join('') + '</div>';
+  }
+  function renderForm(){
+    var d = state.profileForm;
+    var errs = state.formErrors || {};
+    var html = '<div class="app-content" style="padding-top:18px;">';
+
+    html += '<div class="field"><label>Name or nickname</label>' +
+      '<input type="text" data-draft="profile" data-field="name" value="' + esc(d.name) + '" placeholder="e.g. Mara" />' +
+      (errs.name ? '<div class="err">' + esc(errs.name) + '</div>' : '') + '</div>';
+
+    html += '<div class="field"><label>Relationship</label>' + relChips(d.relationship) + '</div>';
+
+    html += '<div class="field"><label>Life stage (optional)</label>' + stageChips(d.lifeStage) +
+      '<div style="font-size:11.5px;color:var(--ink-soft);margin-top:8px;line-height:1.5;">Cycles are often less predictable in the early teen years and during perimenopause — this just tunes how cautious the estimates sound.</div></div>';
+
+    html += '<div class="field"><label>Last period start date</label>' +
+      '<input type="date" data-draft="profile" data-field="lastPeriodStart" value="' + esc(d.lastPeriodStart) + '" max="' + todayISO() + '" />' +
+      (errs.lastPeriodStart ? '<div class="err">' + esc(errs.lastPeriodStart) + '</div>' : '') + '</div>';
+
+    html += '<div class="two-col">' +
+      '<div class="field"><label>Avg. cycle length (days)</label>' +
+      '<input type="number" data-draft="profile" data-field="avgCycleLength" value="' + esc(d.avgCycleLength) + '" min="18" max="45" />' +
+      (errs.avgCycleLength ? '<div class="err">' + esc(errs.avgCycleLength) + '</div>' : '') + '</div>' +
+      '<div class="field"><label>Avg. period length (days)</label>' +
+      '<input type="number" data-draft="profile" data-field="avgPeriodLength" value="' + esc(d.avgPeriodLength) + '" min="1" max="10" />' +
+      (errs.avgPeriodLength ? '<div class="err">' + esc(errs.avgPeriodLength) + '</div>' : '') + '</div>' +
+      '</div>';
+
+    html += '<div class="field"><label>General notes (optional)</label>' +
+      '<textarea data-draft="profile" data-field="notes" placeholder="Anything ongoing worth remembering…">' + esc(d.notes) + '</textarea></div>';
+
+    html += '<div class="form-actions"><button class="btn btn-ghost" data-action="close-overlay">Cancel</button>' +
+      '<button class="btn btn-primary" data-action="save-profile">Save profile</button></div>';
+
+    if (state.editingProfileId){
+      html += '<div style="margin-top:14px;"><button class="btn btn-danger" data-action="delete-profile-from-form">Delete profile</button></div>';
+    }
+
+    html += '</div>';
+    return html;
+  }
+
+  /* ---- Confirm modal ---- */
+  function renderModal(){
+    var el = document.getElementById('modalLayer');
+    var c = state.confirmDialog;
+    if (!c){ el.classList.remove('active'); el.innerHTML = ''; return; }
+    el.classList.add('active');
+    el.innerHTML = '<div class="modal-card"><h3>' + esc(c.title) + '</h3><p>' + esc(c.body) + '</p>' +
+      '<div class="modal-actions"><button class="btn btn-ghost" data-action="dismiss-modal">Cancel</button>' +
+      '<button class="btn btn-danger" style="border-color:var(--accent);color:var(--accent-on);background:var(--accent);" data-action="confirm-modal">' + esc(c.confirmLabel) + '</button></div></div>';
+  }
+
+  function renderToast(){
+    var el = document.getElementById('toastLayer');
+    if (!state.toast){ el.innerHTML = ''; return; }
+    el.innerHTML = '<div class="toast show">' + esc(state.toast) + '</div>';
+  }
+
+  /* ---- Lock screen ---- */
+  function renderLock(){
+    return '<div class="lock-screen">' +
+      '<span class="onboard-glyph">' + ICONS.brand + '</span>' +
+      '<h1>Daybook</h1>' +
+      '<p>Enter your code to continue.</p>' +
+      '<div class="field"><input type="password" inputmode="numeric" autocomplete="off" id="lockInput" placeholder="Code" /></div>' +
+      (state.lockError ? '<div class="err" style="margin-bottom:14px;">' + esc(state.lockError) + '</div>' : '') +
+      '<button class="btn btn-primary" data-action="attempt-unlock">Unlock</button>' +
+      '</div>';
+  }
+
+  /* ================= master render ================= */
+  function render(){
+    var phone = document.getElementById('phone');
+    phone.className = 'phone' + (state.theme === 'dark' ? ' theme-dark' : '');
+
+    if (!state.unlocked){
+      document.getElementById('statusbar').textContent = '';
+      document.getElementById('appHeader').style.display = 'none';
+      document.getElementById('tabbar').style.display = 'none';
+      document.getElementById('appContent').style.display = 'none';
+      var lockOverlay = document.getElementById('overlayLayer');
+      lockOverlay.classList.add('active');
+      lockOverlay.innerHTML = renderLock();
+      renderModal();
+      renderToast();
+      return;
+    }
+
+    renderStatusbar();
+    renderHeader();
+    renderTabbar();
+
+    var content = document.getElementById('appContent');
+    if (!state.overlay){
+      var view = '';
+      if (state.route === 'home') view = renderHome();
+      else if (state.route === 'timeline') view = renderTimeline();
+      else if (state.route === 'notes') view = renderNotes();
+      else if (state.route === 'settings') view = renderSettings();
+      content.innerHTML = view;
+      content.style.display = 'block';
+    } else {
+      content.style.display = 'none';
+    }
+
+    var overlayEl = document.getElementById('overlayLayer');
+    if (state.overlay){
+      overlayEl.classList.add('active');
+      if (state.overlay === 'onboarding') overlayEl.innerHTML = renderOnboarding();
+      else if (state.overlay === 'switcher') overlayEl.innerHTML = renderSwitcher();
+      else if (state.overlay === 'form') overlayEl.innerHTML = renderForm();
+    } else {
+      overlayEl.classList.remove('active');
+      overlayEl.innerHTML = '';
+    }
+
+    renderModal();
+    renderToast();
+  }
+
+  /* ================= event wiring ================= */
+  function init(){
+    var phone = document.getElementById('phone');
+    phone.addEventListener('click', function(e){
+      var btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      var action = btn.getAttribute('data-action');
+      var id = btn.getAttribute('data-id');
+      if (actions[action]) actions[action](btn, id, e);
+    });
+    phone.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' && e.target && e.target.id === 'lockInput'){
+        e.preventDefault();
+        actions['attempt-unlock']();
+      }
+    });
+    bindDraftInputs();
+    render();
+  }
+
+  init();
+})();
+</script>
+
+</body>
+</html>
