@@ -663,16 +663,40 @@
     });
   }
 
+  /* ================= local persistence ================= */
+  var STORAGE_KEY = 'daybook.state.v1';
+  function loadPersisted(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      var data = JSON.parse(raw);
+      if (!data || !Array.isArray(data.profiles)) return null;
+      return data;
+    } catch(e){ return null; }
+  }
+  function persistState(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        profiles: state.profiles,
+        selectedProfileId: state.selectedProfileId,
+        theme: state.theme,
+        hasOnboarded: state.hasOnboarded
+      }));
+    } catch(e){ /* storage unavailable or full - continue in-memory only */ }
+  }
+
   /* ================= app state ================= */
   var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  var persisted = loadPersisted();
   var state = {
     unlocked: false,
     lockError: null,
-    profiles: demoProfiles(),
-    selectedProfileId: 'p1',
+    profiles: persisted ? persisted.profiles : demoProfiles(),
+    selectedProfileId: persisted ? persisted.selectedProfileId : 'p1',
     route: 'home',
-    overlay: 'onboarding',
-    theme: prefersDark ? 'dark' : 'light',
+    overlay: (persisted && persisted.hasOnboarded) ? null : 'onboarding',
+    hasOnboarded: !!(persisted && persisted.hasOnboarded),
+    theme: (persisted && persisted.theme) || (prefersDark ? 'dark' : 'light'),
     confirmDialog: null,
     toast: null,
     profileForm: null,
@@ -737,7 +761,7 @@
       });
     },
     'onboarding-continue': function(){
-      state.overlay = null; render();
+      state.overlay = null; state.hasOnboarded = true; render();
     },
     'go-tab': function(btn){
       state.route = btn.getAttribute('data-tab');
@@ -1338,6 +1362,7 @@
 
     renderModal();
     renderToast();
+    persistState();
   }
 
   /* ================= event wiring ================= */
